@@ -19,6 +19,16 @@
 - Sinh viên: `an@tdmu.edu.vn` / `123456`
 - Sinh viên: `binh@tdmu.edu.vn` / `123456`
 
+## Công nghệ sử dụng
+
+- Flutter/Dart: xây dựng giao diện app Android
+- Kotlin Android native: chọn ảnh từ điện thoại, nén/resize ảnh và hiển thị thông báo cục bộ
+- Node.js: xây dựng backend REST API
+- SQL Server: lưu trữ dữ liệu người dùng, sản phẩm, chat, đơn hàng, thông báo
+- SSE: cập nhật chat/thông báo theo thời gian thực
+- Gmail SMTP: gửi mã xác nhận đăng ký và quên mật khẩu
+- File upload bằng Base64/Data URL: upload ảnh sản phẩm, avatar và ảnh trong chat
+- 
 ## Chạy backend
 
 ```bash
