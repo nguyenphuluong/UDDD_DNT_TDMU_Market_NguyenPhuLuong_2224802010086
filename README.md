@@ -28,7 +28,7 @@
 - SSE: cập nhật chat/thông báo theo thời gian thực
 - Gmail SMTP: gửi mã xác nhận đăng ký và quên mật khẩu
 - File upload bằng Base64/Data URL: upload ảnh sản phẩm, avatar và ảnh trong chat
-- 
+  
 ## Chạy backend
 
 ```bash
