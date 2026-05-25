@@ -7,6 +7,7 @@ import '../core/app_theme.dart';
 import '../core/formatters.dart';
 import '../core/ui_helpers.dart';
 import '../services/api_client.dart';
+import '../services/native_image_picker.dart';
 import 'admin_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -376,6 +377,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
   late final TextEditingController avatar;
   String avatarImage = '';
   bool saving = false;
+  bool uploadingAvatar = false;
 
   @override
   void initState() {
@@ -423,12 +425,17 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                       shape: const CircleBorder(),
                       child: InkWell(
                         customBorder: const CircleBorder(),
-                        onTap: () =>
-                            FocusScope.of(context).requestFocus(FocusNode()),
-                        child: const Padding(
-                          padding: EdgeInsets.all(9),
-                          child: Icon(Icons.image_outlined,
-                              color: Colors.white, size: 18),
+                        onTap: uploadingAvatar ? null : pickAvatar,
+                        child: Padding(
+                          padding: const EdgeInsets.all(9),
+                          child: uploadingAvatar
+                              ? const SizedBox.square(
+                                  dimension: 18,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Icon(Icons.image_outlined,
+                                  color: Colors.white, size: 18),
                         ),
                       ),
                     ),
@@ -514,6 +521,24 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
       if (mounted) setState(() => saving = false);
     }
   }
+
+  Future<void> pickAvatar() async {
+    try {
+      final picked = await NativeImagePicker.pickImage();
+      if (picked == null) return;
+      setState(() => uploadingAvatar = true);
+      final uploadedUrl = await widget.api.uploadImage('${picked['dataUrl']}');
+      if (!mounted) return;
+      setState(() {
+        avatarImage = uploadedUrl;
+        avatar.text = uploadedUrl;
+      });
+    } catch (error) {
+      if (mounted) showSnack(context, '$error');
+    } finally {
+      if (mounted) setState(() => uploadingAvatar = false);
+    }
+  }
 }
 
 class EditProductSheet extends StatefulWidget {
@@ -536,6 +561,7 @@ class _EditProductSheetState extends State<EditProductSheet> {
   late final TextEditingController location;
   late final TextEditingController image;
   bool saving = false;
+  bool uploadingImage = false;
 
   @override
   void initState() {
@@ -576,6 +602,33 @@ class _EditProductSheetState extends State<EditProductSheet> {
                 required: true, keyboardType: TextInputType.number),
             _input(condition, 'Tình trạng', required: true),
             _input(location, 'Địa điểm', required: true),
+            OutlinedButton.icon(
+              onPressed: uploadingImage ? null : pickProductImage,
+              icon: uploadingImage
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.photo_library_outlined),
+              label: const Text('Chọn ảnh từ điện thoại'),
+            ),
+            const SizedBox(height: 10),
+            if (image.text.trim().isNotEmpty) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.network(
+                  image.text.trim(),
+                  height: 150,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    height: 150,
+                    color: bg,
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.broken_image_outlined),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
             _input(image, 'Link ảnh'),
             const SizedBox(height: 12),
             FilledButton.icon(
@@ -627,6 +680,23 @@ class _EditProductSheetState extends State<EditProductSheet> {
       if (mounted) Navigator.pop(context, true);
     } finally {
       if (mounted) setState(() => saving = false);
+    }
+  }
+
+  Future<void> pickProductImage() async {
+    try {
+      final picked = await NativeImagePicker.pickImage();
+      if (picked == null) return;
+      setState(() => uploadingImage = true);
+      final uploadedUrl = await widget.api.uploadImage('${picked['dataUrl']}');
+      if (!mounted) return;
+      setState(() {
+        image.text = uploadedUrl;
+      });
+    } catch (error) {
+      if (mounted) showSnack(context, '$error');
+    } finally {
+      if (mounted) setState(() => uploadingImage = false);
     }
   }
 }

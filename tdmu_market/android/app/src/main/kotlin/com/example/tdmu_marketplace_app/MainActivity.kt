@@ -9,6 +9,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.provider.OpenableColumns
@@ -16,6 +18,9 @@ import android.util.Base64
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.io.ByteArrayOutputStream
+import kotlin.math.max
+import kotlin.math.roundToInt
 
 class MainActivity : FlutterActivity() {
     private val imageChannelName = "tdmu_marketplace/image_picker"
@@ -66,18 +71,77 @@ class MainActivity : FlutterActivity() {
         }
         try {
             val uri = data.data as Uri
-            val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: ByteArray(0)
-            val mime = contentResolver.getType(uri) ?: "image/jpeg"
+            val image = readUploadImage(uri)
             val fileName = queryFileName(uri)
-            val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+            val base64 = Base64.encodeToString(image.first, Base64.NO_WRAP)
             result?.success(mapOf(
                 "fileName" to fileName,
-                "mime" to mime,
-                "dataUrl" to "data:$mime;base64,$base64"
+                "mime" to image.second,
+                "dataUrl" to "data:${image.second};base64,$base64"
             ))
         } catch (error: Exception) {
             result?.error("PICK_IMAGE_FAILED", error.message, null)
         }
+    }
+
+    private fun readUploadImage(uri: Uri): Pair<ByteArray, String> {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        contentResolver.openInputStream(uri)?.use {
+            BitmapFactory.decodeStream(it, null, bounds)
+        }
+
+        val maxSide = 1600
+        val originalWidth = bounds.outWidth
+        val originalHeight = bounds.outHeight
+        if (originalWidth <= 0 || originalHeight <= 0) {
+            val raw = contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: ByteArray(0)
+            val mime = contentResolver.getType(uri)?.takeIf { it.startsWith("image/") } ?: "image/jpeg"
+            return Pair(raw, mime)
+        }
+
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = calculateInSampleSize(originalWidth, originalHeight, maxSide)
+        }
+        val decoded = contentResolver.openInputStream(uri)?.use {
+            BitmapFactory.decodeStream(it, null, options)
+        } ?: throw IllegalStateException("Không đọc được ảnh")
+
+        val largestSide = max(decoded.width, decoded.height)
+        val bitmap = if (largestSide > maxSide) {
+            val scale = maxSide.toFloat() / largestSide.toFloat()
+            Bitmap.createScaledBitmap(
+                decoded,
+                (decoded.width * scale).roundToInt(),
+                (decoded.height * scale).roundToInt(),
+                true
+            )
+        } else {
+            decoded
+        }
+
+        val output = ByteArrayOutputStream()
+        var quality = 86
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, output)
+        while (output.size() > 2_500_000 && quality > 58) {
+            output.reset()
+            quality -= 8
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, output)
+        }
+
+        if (bitmap !== decoded) bitmap.recycle()
+        decoded.recycle()
+
+        return Pair(output.toByteArray(), "image/jpeg")
+    }
+
+    private fun calculateInSampleSize(width: Int, height: Int, maxSide: Int): Int {
+        var sampleSize = 1
+        var halfWidth = width / 2
+        var halfHeight = height / 2
+        while (halfWidth / sampleSize >= maxSide || halfHeight / sampleSize >= maxSide) {
+            sampleSize *= 2
+        }
+        return sampleSize
     }
 
     private fun queryFileName(uri: Uri): String {

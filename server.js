@@ -36,6 +36,8 @@ const UPLOAD_DIR = path.join(PUBLIC_DIR, "uploads");
 const TOKEN_SECRET = process.env.TOKEN_SECRET || "tdmu-marketplace-demo-secret";
 const STUDENT_EMAIL_DOMAIN = "@student.tdmu.edu.vn";
 const CODE_TTL_MS = 10 * 60 * 1000;
+const MAX_JSON_BODY_BYTES = 15_000_000;
+const MAX_UPLOAD_BYTES = 8_000_000;
 
 const clients = new Map();
 
@@ -88,7 +90,7 @@ function parseBody(req) {
     let body = "";
     req.on("data", chunk => {
       body += chunk;
-      if (body.length > 5_000_000) {
+      if (body.length > MAX_JSON_BODY_BYTES) {
         req.destroy();
         reject(new Error("Payload qua lon"));
       }
@@ -781,8 +783,8 @@ async function handleApi(req, res, url) {
     if (!match) return sendError(res, 400, "Anh tai len khong hop le");
     const ext = match[1].includes("png") ? "png" : match[1].includes("webp") ? "webp" : "jpg";
     const buffer = Buffer.from(match[2], "base64");
-    if (!buffer.length || buffer.length > 4_000_000) {
-      return sendError(res, 400, "Anh phai nho hon 4MB");
+    if (!buffer.length || buffer.length > MAX_UPLOAD_BYTES) {
+      return sendError(res, 400, "Anh phai nho hon 8MB");
     }
     ensureUploadDir();
     const fileName = `${id("img")}.${ext}`;
