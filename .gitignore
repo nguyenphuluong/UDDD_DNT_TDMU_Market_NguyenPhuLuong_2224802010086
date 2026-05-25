@@ -1,0 +1,10 @@
+.env
+node_modules/
+*.apk
+*.zip
+tdmu_market/build/
+tdmu_market/.dart_tool/
+tdmu_market/.idea/
+tdmu_market/*.iml
+android/build/
+android/.gradle/

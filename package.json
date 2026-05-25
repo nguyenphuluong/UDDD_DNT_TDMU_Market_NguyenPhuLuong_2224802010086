@@ -1,0 +1,22 @@
+{
+  "name": "tdmu-marketplace",
+  "version": "1.0.0",
+  "description": "TDMU Marketplace - ung dung cho sinh vien mua ban, trao doi do dung voi backend rieng.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "tdmu",
+    "marketplace",
+    "student",
+    "node"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "msnodesqlv8": "^5.2.0",
+    "mssql": "^12.5.4"
+  }
+}

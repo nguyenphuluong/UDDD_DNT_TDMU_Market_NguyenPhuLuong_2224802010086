@@ -1,0 +1,23 @@
+name: tdmu_marketplace_app
+description: TDMU Marketplace Flutter app using the existing Node backend.
+publish_to: "none"
+version: 1.0.1+2
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/branding/logoapp.jpg
+    - assets/branding/tdmu_market_logo.png
+    - assets/branding/tdmu_market_icon_512.png
