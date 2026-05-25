@@ -26,7 +26,6 @@ npm install
 npm start
 ```
 
-Backend chạy API trên port `3000` theo mặc định. Bản web đã được bỏ, nên đường dẫn `/` có thể trả `404`; app Flutter vẫn gọi các API `/api/...`.
 
 ## Database
 
